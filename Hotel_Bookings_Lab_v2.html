@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hotel Bookings Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#142337;--navy2:#1d2f48;--ink:#191e23;--muted:#5b6573;--line:#e3e8ef;--bg:#f8fafc;--card:#fff;
+--blue:#2d64b4;--blue-pale:#eaf1fb;--green:#2d825f;--green-pale:#e6f4ee;--red:#c0392b;--red-pale:#fbecea;--amber:#9a6b00;--amber-pale:#fff6e0;
+--code:#1b1f2a;--code-tx:#e8ecf4}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 Inter,"Segoe UI",Arial,sans-serif}
+header{background:var(--navy);color:#fff;padding:48px 16px 40px}
+.wrap{max-width:1120px;margin:0 auto}
+.kicker{color:#8fb3e8;font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:.78rem}
+h1{font-size:clamp(1.9rem,4.5vw,2.9rem);line-height:1.15;margin:.35em 0 .5em;letter-spacing:-.02em}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips span{background:var(--navy2);border:1px solid #2c4366;border-radius:999px;padding:6px 14px;font-size:.88rem;color:#dbe6f5}
+.layout{display:grid;grid-template-columns:240px minmax(0,1fr);gap:40px;padding:36px 16px 80px}
+nav{position:sticky;top:20px;align-self:start;font-size:.9rem}
+nav b{display:block;color:var(--muted);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}
+nav ol{list-style:none;margin:0;padding:0;border-left:2px solid var(--line)}
+nav a{display:block;padding:5px 0 5px 14px;color:var(--muted);text-decoration:none;margin-left:-2px;border-left:2px solid transparent}
+nav a:hover,nav a.on{color:var(--blue);border-left-color:var(--blue)}
+main{min-width:0}
+h2{font-size:1.45rem;margin:2.2em 0 .6em;padding-top:.4em;color:var(--navy);letter-spacing:-.01em;scroll-margin-top:16px}
+main>h2:first-child{margin-top:0}
+p,li{max-width:72ch}
+a{color:var(--blue)}
+code{font:500 .88em "JetBrains Mono",Consolas,monospace;background:#eef1f5;padding:.1em .35em;border-radius:5px;overflow-wrap:anywhere}
+blockquote{margin:1.2em 0;padding:18px 22px;background:var(--card);border:1px solid var(--line);border-left:5px solid var(--blue);border-radius:12px;box-shadow:0 2px 8px rgba(20,35,55,.06)}
+blockquote p{margin:.3em 0}
+blockquote p:last-child{color:var(--muted);font-weight:600}
+.code{position:relative;margin:1em 0 1.3em}
+pre{margin:0;background:var(--code);color:var(--code-tx);padding:18px 20px;border-radius:12px;overflow-x:auto;font:.9rem/1.6 "JetBrains Mono",Consolas,monospace}
+pre code{background:none;padding:0;color:inherit;font:inherit}
+.copy{position:absolute;top:10px;right:10px;background:#2a3140;color:#cfd6e2;border:0;border-radius:7px;padding:5px 11px;font:600 .75rem Inter,sans-serif;cursor:pointer}
+.copy:hover{background:#3a4458}.copy.done{background:var(--green);color:#fff}
+.tw{overflow-x:auto;margin:1em 0 1.4em;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:.93rem}
+th{background:var(--navy);color:#fff;text-align:left;padding:10px 14px;font-weight:600;white-space:nowrap}
+td{padding:9px 14px;border-top:1px solid var(--line);vertical-align:top}
+tr:nth-child(even) td{background:#fafbfd}
+td:first-child{font-weight:600;white-space:nowrap}
+.rules,.trap,.note,div.form{border-radius:12px;padding:6px 20px;margin:1.2em 0}
+.rules{background:var(--green-pale);border:1px solid #bfe3d1}
+.trap{background:var(--red-pale);border:1px solid #f0c7c1}
+.note{background:var(--amber-pale);border:1px solid #f1dca4}
+p.form,div.form{background:var(--blue-pale);border:1px solid #c9daf3;border-radius:12px}
+p.form{padding:12px 18px 12px 46px;position:relative}
+p.form::before{content:"✎";position:absolute;left:18px;top:11px;color:var(--blue);font-weight:700}
+.trap .code,.note .code{margin:.8em 0}
+footer{color:var(--muted);font-size:.85rem;text-align:center;padding:0 16px 40px}
+@media (max-width:860px){.layout{grid-template-columns:1fr;gap:0;padding-top:24px}nav{position:static;margin-bottom:28px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}}
+@media print{header{padding:20px 0;background:#fff;color:#000}.chips span{background:#fff;color:#000;border-color:#999}nav,.copy{display:none}.layout{display:block;padding:0}
+pre{white-space:pre-wrap;background:#f3f4f6;color:#111}h2{break-after:avoid}.tw,.code,.trap,.note,.rules{break-inside:avoid}}
+</style></head>
+<body>
+<header><div class="wrap">
+<div class="kicker">Student task sheet · pandas, Matplotlib &amp; Seaborn</div>
+<h1>Lab: Clean a Messy Real Dataset — Hotel Bookings</h1>
+<div class="chips"><span>About 4 hours</span><span>Work on your own</span><span>You make the decisions</span><span>119,390 real bookings</span><span>Not cleaned · not scaled</span></div>
+</div></header>
+<div class="wrap layout">
+<nav aria-label="Sections"><b>Sections</b><ol><li><a href="#your-job">Your job</a></li><li><a href="#part-a-plan-before-you-code-what">Part A — Plan before you code (WHAT)</a></li><li><a href="#part-b-load-and-inspect-the-data">Part B — Load and inspect the data</a></li><li><a href="#part-c-target-features-and-leakage">Part C — Target, features and leakage</a></li><li><a href="#part-d-find-the-problems-do-not-fix-yet">Part D — Find the problems (do not fix yet)</a></li><li><a href="#part-e-clean-the-data-your-decisions">Part E — Clean the data (your decisions)</a></li><li><a href="#part-f-create-new-features">Part F — Create new features</a></li><li><a href="#part-g-answer-the-manager-s-questions">Part G — Answer the manager&#x27;s questions</a></li><li><a href="#part-h-charts">Part H — Charts</a></li><li><a href="#part-i-reflection">Part I — Reflection</a></li><li><a href="#sources">Sources</a></li></ol></nav>
+<main>
+<h2 id="your-job">Your job</h2>
+<p>Today you are a junior data analyst at a hotel group in Portugal. This is a real dataset with real problems. Nobody cleaned it for you, and nobody will tell you the rules. <strong>You</strong> decide what to clean and how — and you must explain every decision.</p>
+<p>Your manager sends you this message:</p>
+<blockquote>
+<p>Hi! We have booking data from our two hotels (2015–2017). Too many guests cancel. Next month we want to build a model that predicts cancellations. Before that, I need a clean dataset I can trust, some first answers and a few charts.</p>
+<p>I don't only want the result. I want to know WHAT you did, WHICH tool you used and WHY. If you remove 30,000 rows, I need to know why that was the right choice. If you had two options, tell me which one you rejected and why.</p>
+<p>Thanks, Dilshod (Revenue Manager)</p>
+</blockquote>
+<div class="rules">
+<p><strong>What you hand in — three files</strong></p>
+<ol>
+<li><code>StudentName_Hotel_Lab.ipynb</code> — your notebook with all outputs visible.</li>
+<li><code>hotels_clean.csv</code> — your clean data.</li>
+<li><code>StudentName_Hotel_Documentation.docx</code> — the documentation file. <strong>This is the most important file.</strong> For every step you write: what you did, which tool or code you used, why you used it, what else you considered, and the numbers that prove it.</li>
+</ol>
+<p><strong>Rules</strong></p>
+<ul>
+<li>Do not train a model. Do not scale numbers. Do not split the data.</li>
+<li>Never change the original file. Save your clean data as a NEW file.</li>
+<li>Every number in the documentation must also be visible in your notebook.</li>
+<li>“It was easy” or “everyone uses it” is not a reason. A reason talks about THIS data.</li>
+</ul>
+</div>
+<div class="note">
+<p><strong>How you will be graded.</strong> Code that works is only part of the grade. Most points come from your documentation: clear decisions, honest reasons, numbers before and after, and the options you rejected. Two students can make different decisions and both get full marks — if both explain them well.</p>
+</div>
+<h2 id="part-a-plan-before-you-code-what">Part A — Plan before you code (WHAT)</h2>
+<p>Fill <strong>Part A of the documentation file before you write any code</strong>. Your teacher can ask to see it after 20 minutes.</p>
+<ol>
+<li>Restate the manager's problem in your own words (3–5 sentences).</li>
+<li>Write your plan as a logic map: for each stage write <strong>Input → Action → Output</strong>. Stages: Load, Inspect, Clean, New features, Analyse, Visualise, Save.</li>
+<li>List the libraries and functions you plan to use in each stage. You may change your plan later — then write what changed and why.</li>
+</ol>
+<h2 id="part-b-load-and-inspect-the-data">Part B — Load and inspect the data</h2>
+<ol>
+<li>Open <a target="_blank" rel="noopener" href="https://www.kaggle.com/datasets/jessemostipak/hotel-booking-demand">Hotel booking demand on Kaggle</a>. Download the ZIP and find <code>hotel_bookings.csv</code>.</li>
+<li>Upload it to Colab, or put it next to your notebook in Jupyter.</li>
+<li>Load it with pandas. Check that the file has <strong>119,390 rows and 32 columns</strong>. If not, ask the teacher.</li>
+<li>Keep an untouched copy of the original in memory. You will need it to compare BEFORE and AFTER.</li>
+</ol>
+<div class="code"><button class="copy" type="button">Copy</button><pre><code class="language-python">import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+</code></pre></div>
+<p>That is the only code you get. Choose your own commands to inspect the data. In the documentation, write which commands you used, what each one showed you, and why you needed it.</p>
+<p>Read the column meanings in the <a target="_blank" rel="noopener" href="https://repositorio.iscte-iul.pt/bitstream/10071/16929/1/Hotelbookingdemanddatasets.pdf">original paper (PDF)</a> (the table of variables). Real analysts read the documentation before they clean anything.</p>
+<h2 id="part-c-target-features-and-leakage">Part C — Target, features and leakage</h2>
+<p>The future question is: “Will this booking be canceled?”</p>
+<ol>
+<li>Find the target column.</li>
+<li><strong>Leakage hunt.</strong> Some columns are only known AFTER the guest arrives or cancels. A model that uses them looks perfect in class and fails in real life. Find <strong>at least two</strong> leaking columns. For each one, show the evidence in your notebook (for example a crosstab, or the cancellation rate for different values) and explain it.</li>
+<li>Choose <strong>six features</strong> that are known at booking time. For each one, explain why it may help predict a cancellation. Show one number from the data that supports your reason.</li>
+</ol>
+<p>Hint: the obvious leak is easy to find. The second one is hidden. Ask yourself for each column: “Do we know this on the day the guest books?”</p>
+<h2 id="part-d-find-the-problems-do-not-fix-yet">Part D — Find the problems (do not fix yet)</h2>
+<p>Be a detective. Find <strong>at least 10 different problems</strong> in the data. For each problem, write in the documentation: the column, the problem, how many rows, and the code that found it.</p>
+<p>Look for these kinds of problems. There is at least one of each:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Kind of problem</th>
+<th>What it means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Missing values</td>
+<td>Empty cells</td>
+</tr>
+<tr>
+<td>Missing that is NOT missing</td>
+<td>An empty cell that has a meaning (read the paper!)</td>
+</tr>
+<tr>
+<td>Repeated rows</td>
+<td>Rows that are exact copies</td>
+</tr>
+<tr>
+<td>Impossible bookings</td>
+<td>Things that cannot happen in a real hotel</td>
+</tr>
+<tr>
+<td>Strange numbers</td>
+<td>Values that are possible but very unusual</td>
+</tr>
+<tr>
+<td>Wrong prices</td>
+<td>Prices that are wrong or need checking</td>
+</tr>
+<tr>
+<td>Inconsistent labels</td>
+<td>The same thing written in two different ways</td>
+</tr>
+<tr>
+<td>Wrong data types</td>
+<td>Numbers stored as decimals or text when they should not be</td>
+</tr>
+<tr>
+<td>Badly stored dates</td>
+<td>A date that is not stored as one real date</td>
+</tr>
+</tbody>
+</table></div>
+<p>For each problem, also answer: <strong>is this a mistake, or could it be real?</strong> For example, can a booking have 0 nights? Can a room cost 0 euros? Not every strange value is an error.</p>
+<h2 id="part-e-clean-the-data-your-decisions">Part E — Clean the data (your decisions)</h2>
+<p>Now you decide. For <strong>every</strong> problem from Part D, choose one action:</p>
+<ul>
+<li><strong>Remove</strong> the rows,</li>
+<li><strong>Fix</strong> the values (fill, replace, change type),</li>
+<li><strong>Keep</strong> them as they are — this is allowed if you explain why.</li>
+</ul>
+<p>For each decision, write in the documentation:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Problem</th>
+<th>Decision</th>
+<th>Code / tool used</th>
+<th>Why this decision</th>
+<th>Option you rejected and why</th>
+<th>Rows before → after</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>example: country is missing in 488 rows</em></td>
+<td><em>Fill with "Unknown"</em></td>
+<td><em><code>fillna("Unknown")</code></em></td>
+<td><em>Only 0.4% of rows. Country is a feature, not the target, so “Unknown” is honest and keeps 488 real bookings</em></td>
+<td><em>Drop the rows: loses data. Fill with "PRT" (most common): invents information</em></td>
+<td><em>119,390 → 119,390</em></td>
+</tr>
+</tbody>
+</table></div>
+<p>Your clean data must pass these checks at the end:</p>
+<ul>
+<li>0 missing values, unless you can explain why a missing value must stay.</li>
+<li>No impossible bookings.</li>
+<li>Correct data types: whole numbers are whole numbers, text categories have one spelling each.</li>
+<li>One real date column for the arrival date.</li>
+<li>The original file is unchanged. The clean data is saved as <code>hotels_clean.csv</code>.</li>
+</ul>
+<div class="trap">
+<p><strong>Two decisions that need evidence</strong></p>
+<ol>
+<li><strong>Repeated rows.</strong> There is no booking ID. Are all repeated rows mistakes? Calculate the cancellation rate WITH and WITHOUT the repeated rows. Write both numbers, explain the difference, and say which version you would give the manager.</li>
+<li><strong>Outliers in price (<code>adr</code>).</strong> Use the IQR rule (Q1 − 1.5×IQR, Q3 + 1.5×IQR) to find “outliers”. How many rows does it flag? Look at WHEN those bookings happen and in WHICH hotel. Are they mistakes, or real summer prices? Decide what to remove, and prove it.</li>
+</ol>
+</div>
+<h2 id="part-f-create-new-features">Part F — Create new features</h2>
+<p>Create <strong>at least four</strong> new columns that a future model could use. You decide which ones. Some ideas:</p>
+<ul>
+<li>total nights of the stay</li>
+<li>total number of guests</li>
+<li>the total price of the stay</li>
+<li>the day of the week of the arrival</li>
+<li>whether the guest got a different room type than they booked — careful, is this leakage? (see Part C)</li>
+</ul>
+<p>For each new column, write: the code, what it means, and why it may help predict a cancellation. Show its average for canceled and not-canceled bookings.</p>
+<h2 id="part-g-answer-the-manager-s-questions">Part G — Answer the manager's questions</h2>
+<p>Use your CLEAN data. For each question, write the code, the number (one decimal), and one sentence that explains the result in plain English.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Manager's question</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Q1</td>
+<td>What % of bookings are canceled in each hotel?</td>
+</tr>
+<tr>
+<td>Q2</td>
+<td>Which market segment cancels the most? And which one the least?</td>
+</tr>
+<tr>
+<td>Q3</td>
+<td>Do canceled bookings have a longer lead time? Compare the mean and the median. Why are they so different?</td>
+</tr>
+<tr>
+<td>Q4</td>
+<td>In which month is each hotel most expensive?</td>
+</tr>
+<tr>
+<td>Q5</td>
+<td>What % of “Non Refund” bookings are canceled? Why could this result be strange? What would you ask the manager?</td>
+</tr>
+<tr>
+<td>Q6</td>
+<td>Write <strong>your own question</strong> about cancellations. Answer it with data.</td>
+</tr>
+<tr>
+<td>Q7</td>
+<td>Write <strong>your own question</strong> about prices. Answer it with data.</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="part-h-charts">Part H — Charts</h2>
+<p>Make <strong>five charts</strong>. You choose the chart type — and you must explain why that type fits the question.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Question the chart must answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>How far ahead do people book?</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Which hotel has more cancellations?</td>
+</tr>
+<tr>
+<td>3</td>
+<td>How does the price change during the year in each hotel?</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Which market segments cancel the most?</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Which numeric columns are related to each other?</td>
+</tr>
+</tbody>
+</table></div>
+<p>Every chart needs a title, axis labels and units. Bars that show counts or % start at zero. Months must be in calendar order, not A→Z. In the documentation, write for each chart: the question, the chart type, why this type, the code, and the one thing the chart shows.</p>
+<h2 id="part-i-reflection">Part I — Reflection</h2>
+<p>Answer in the documentation:</p>
+<ol>
+<li>Which decision was the hardest? What would change if you had decided the other way?</li>
+<li>Name two things in this data that you still don't trust, and how you would check them with the hotel.</li>
+<li>What would you tell the manager in three sentences?</li>
+</ol>
+<h2 id="sources">Sources</h2>
+<ul>
+<li>Dataset: <a target="_blank" rel="noopener" href="https://www.kaggle.com/datasets/jessemostipak/hotel-booking-demand">Hotel booking demand — Kaggle</a></li>
+<li>Original paper and column meanings: Antonio, Almeida and Nunes, “Hotel booking demand datasets”, <em>Data in Brief</em>, 2019 — <a target="_blank" rel="noopener" href="https://repositorio.iscte-iul.pt/bitstream/10071/16929/1/Hotelbookingdemanddatasets.pdf">PDF</a></li>
+<li>The data was not cleaned or scaled for this lab.</li>
+</ul>
+</main></div>
+<footer>Hotel Bookings Lab · AI/ML Fundamentals</footer>
+<script>
+document.querySelectorAll(".copy").forEach(b=>b.addEventListener("click",async()=>{
+  const t=b.parentElement.querySelector("code").innerText;
+  try{await navigator.clipboard.writeText(t);}catch(e){const r=document.createRange();r.selectNodeContents(b.parentElement.querySelector("code"));const s=getSelection();s.removeAllRanges();s.addRange(r);document.execCommand("copy");s.removeAllRanges();}
+  b.textContent="Copied";b.classList.add("done");setTimeout(()=>{b.textContent="Copy";b.classList.remove("done")},1500);
+}));
+const links=[...document.querySelectorAll("nav a")];
+const obs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle("on",a.getAttribute("href")==="#"+e.target.id))}}),{rootMargin:"0px 0px -70% 0px"});
+document.querySelectorAll("main h2").forEach(h=>obs.observe(h));
+</script>
+</body></html>

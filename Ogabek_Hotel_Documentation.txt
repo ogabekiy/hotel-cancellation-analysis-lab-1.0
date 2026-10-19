@@ -1,0 +1,430 @@
+# Hotel buyurtmalari tahlili
+
+## 1. Menejerning muammosi
+
+Daromadlar menejeri Dilshod mehmonxonada mijozlar tomonidan buyurtmalarning ko'p bekor qilinishidan (cancellation) xavotirda. U kelasi oyda bekor qilishlarni oldindan bashorat qiluvchi machine learning modelini qurishni rejalashtirmoqda.
+
+Model to'g'ri ishlashi uchun xatolardan tozalangan va ishonchli ma'lumotlar, shuningdek, biznes holatini ko'rsatuvchi dastlabki tahlillar hamda grafiklar kerak. Eng muhimi, har bir tozalash qadami va qabul qilingan qarorning sababi raqamlar bilan asoslanishi lozim.
+
+## 2-3. Mantiqiy xarita va rejalashtirilgan kutubxonalar
+
+Har bir bosqichda kiritiladigan ma'lumot (Input), bajariladigan amal (Action), olinadigan natija (Output) va ishlatiladigan vositalar ko'rsatilgan.
+
+### 1. Yuklash (Load)
+
+- **Kiritish (Input):** `hotel_bookings.csv` fayli.
+- **Amal (Action):** Faylni Pandas yordamida o'qish va asl nusxasini xavfsizlik uchun xotirada saqlash.
+- **Natija (Output):** `df` va `df_original` DataFrame obyektlari.
+- **Vositalar (Tools):** `pandas`, `pd.read_csv()`, `df.copy()`.
+
+### 2. O'rganish (Inspect)
+
+- **Kiritish (Input):** `df` obyekti.
+- **Amal (Action):** Ma'lumotlar hajmini (119,390 qator va 32 ustun), ustun turlarini, bo'sh qiymatlarni (missing values) va g'ayrioddiy qiymatlarni tekshirish.
+- **Natija (Output):** Ma'lumotlardagi kamida 10 ta muammo ro'yxati.
+- **Vositalar (Tools):** `df.info()`, `df.describe()`, `df.head()`, `df.isnull().sum()`, `df.duplicated().sum()`.
+
+### 3. Tozalash (Clean)
+
+- **Kiritish (Input):** Muammolari aniqlangan `df`.
+- **Amal (Action):** Bo'sh qiymatlarni to'ldirish yoki o'chirish, takroriy qatorlar bo'yicha qaror qabul qilish, noto'g'ri ma'lumot turlarini to'g'rilash va mantiqsiz buyurtmalarni filtrlash.
+- **Natija (Output):** Mantiqsiz va bo'sh qiymatlari qolmagan tozalangan DataFrame.
+- **Vositalar (Tools):** `df.dropna()`, `df.fillna()`, `df.drop_duplicates()`, `df.astype()`, mantiqiy filtrlash (masalan, `df[df['price'] > 0]`).
+
+### 4. Yangi belgilar yaratish (New features)
+
+- **Kiritish (Input):** Tozalangan DataFrame.
+- **Amal (Action):** Mavjud ustunlardan foydalanib, model uchun kamida 4 ta yangi ustun yaratish. Masalan, qolishning umumiy narxi va jami mehmonlar soni.
+- **Natija (Output):** Yangi belgilar qo'shilgan kengaytirilgan DataFrame.
+- **Vositalar (Tools):** `df.apply()`, vektorli qo'shish va ko'paytirish (masalan, `df['a'] + df['b']`), `pd.to_datetime()`.
+
+### 5. Tahlil qilish (Analyse)
+
+- **Kiritish (Input):** Kengaytirilgan DataFrame.
+- **Amal (Action):** Menejerning 7 ta biznes savoliga aniq raqamlar asosida javob topish.
+- **Natija (Output):** Har bir savol uchun statistik natijalar va tushuntirishlar.
+- **Vositalar (Tools):** `df.groupby()`, `df.mean()`, `df.median()`, `df.value_counts()`.
+
+### 6. Vizualizatsiya (Visualise)
+
+- **Kiritish (Input):** Kengaytirilgan DataFrame.
+- **Amal (Action):** Trendlar va bog'liqliklarni ko'rsatuvchi 5 xil grafik chizish.
+- **Natija (Output):** Aniq sarlavha va o'qlarga ega grafiklar.
+- **Vositalar (Tools):** `matplotlib.pyplot`, `seaborn` (masalan, `sns.barplot()`, `sns.lineplot()`, `sns.heatmap()`).
+
+### 7. Saqlash (Save)
+
+- **Kiritish (Input):** Yakuniy, tozalangan DataFrame.
+- **Amal (Action):** Asl faylni o'zgartirmasdan, natijani yangi CSV fayl sifatida saqlash.
+- **Natija (Output):** `hotels_clean.csv` fayli.
+- **Vositalar (Tools):** `df.to_csv(index=False)`.
+
+## Part B — Load and inspect the data
+
+### Faylni yuklash va nusxalash
+
+`hotel_bookings.csv` fayli pandas yordamida yuklandi va xavfsizlik uchun uning o'zgarmas asl nusxasi `df_original = df.copy()` orqali xotirada saqlab qolindi. O'lchami tekshirilganda kutilganidek 119,390 qator va 32 ustun ekanligi tasdiqlandi.
+
+Ma'lumotlarni o'rganish uchun quyidagi buyruqlardan foydalanildi:
+
+### `df.shape`
+
+- **Nima ko'rsatdi:** DataFrame'ning umumiy qatorlar va ustunlar sonini.
+- **Nega kerak bo'ldi:** Fayl to'liq va yo'qotishlarsiz yuklanganini (119390, 32) tasdiqlash uchun.
+
+### `df.info()`
+
+- **Nima ko'rsatdi:** Har bir ustunning nomi, bo'sh bo'lmagan (non-null) qatorlar soni va ma'lumot turlarini (int, float, object).
+- **Nega kerak bo'ldi:** Qaysi ustunlarda bo'sh kataklar (missing values) borligini darhol aniqlash va qaysi ustunlarning data-tiplari noto'g'ri ekanligini (masalan, sanalar object formatida turganini) ko'rish uchun.
+
+### `df.head()`
+
+- **Nima ko'rsatdi:** Jadvalning dastlabki 5 ta qatorini.
+- **Nega kerak bo'ldi:** Raqamlar va matnlar vizual jihatdan qanday yozilganini (masalan, davlatlar qanday qisqartma bilan yozilgani yoki oylar nomi raqamdami, matndami) ko'z bilan ko'rib tushunib olish uchun.
+
+### `df.describe()`
+
+- **Nima ko'rsatdi:** Barcha raqamli ustunlarning statistik ko'rsatkichlarini (o'rtacha qiymat, minimum, maksimum, standart og'ish).
+- **Nega kerak bo'ldi:** Ma'lumotlardagi g'ayrioddiy raqamlar yoki xatoliklarni topish uchun. Masalan, narxlar (adr) yoki qolish kunlari orasida manfiy sonlar yoxud juda katta "outlier" (mantiqsiz darajada katta son) lar bor-yo'qligini tekshirish maqsadi ko'zlandi.
+
+## Part C — Target, features and leakage
+
+### 1. Target (Nishon) ustuni
+
+Bizning model bashorat qilishi kerak bo'lgan ustun: `is_canceled` (1 = bekor qilingan, 0 = bekor qilinmagan).
+
+### 2. Leakage (Ma'lumotlar sizib chiqishi) ovi
+
+Bu ustunlar mijoz kelganidan yoki bekor qilganidan keyin shakllanadi. Ular buyurtma berilayotgan paytda ma'lum bo'lmaydi va modelni noto'g'ri o'rgatadi.
+
+#### Leakage 1: `reservation_status`
+
+- **Dalil (Notebook'dagi crosstab natijasi):** `is_canceled` 0 bo'lganda bu ustunda faqat 'Check-Out' turibdi (75166 ta). `is_canceled` 1 bo'lganda faqat 'Canceled' (43017 ta) yoki 'No-Show' (1207 ta) turibdi.
+- **Tushuntirish:** Bu ustun to'g'ridan-to'g'ri nishon (target)ning matnli ko'rinishidir. Buyurtma berilgan kunida mijozning "Check-Out" yoki "Canceled" qilgani ma'lum bo'lmaydi. Uni o'chirish kerak.
+
+#### Leakage 2: `reservation_status_date`
+
+- **Dalil:** Bu ustunda mijozning mehmonxonadan chiqqan (Check-Out) yoki buyurtmani bekor qilgan (Canceled) aniq sanasi saqlangan.
+- **Tushuntirish:** Biz buyurtma kelib tushgan sanani bilamiz, lekin status qachon o'zgarishi mijoz mehmonxonaga kelib ketgunicha (yoki bekor qilgunicha) noma'lum bo'ladi. Agar modelga bekor qilingan sanani bersak, model "sana bor ekan, demak u bekor qilingan" deb o'z-o'zini aldaydi.
+
+### 3. Oltita Feature (Buyurtma vaqtida ma'lum bo'lgan belgilar)
+
+Bu ustunlar mijoz buyurtma qilayotgan paytning o'zidayoq bazaga kiritiladi.
+
+#### `lead_time` (Buyurtma qilingan kun va kelish kuni orasidagi vaqt)
+
+- **Nega yordam beradi:** Mijoz qanchalik erta xona band qilsa, oradagi vaqtda rejalari o'zgarib ketish ehtimoli shunchalik yuqori bo'ladi.
+- **Dalil:** Kod natijasiga ko'ra, bekor qilganlarning o'rtacha `lead_time` ko'rsatkichi 104.9 kun, bekor qilmaganlarda esa faqat 79.9 kun.
+
+#### `total_of_special_requests` (Maxsus talablar soni)
+
+- **Nega yordam beradi:** Mijoz qo'shimcha talablar (masalan, bolalar karavoti) yozib qoldirgan bo'lsa, bu uning haqiqatan ham kelish niyati jiddiy ekanligini bildiradi.
+- **Dalil:** Bekor qilmaganlarning o'rtacha maxsus talablari 0.71 ta bo'lsa, bekor qilganlarda bu raqam pastroq (0.32 ta).
+
+#### `previous_cancellations` (Oldingi bekor qilishlar soni)
+
+- **Nega yordam beradi:** Agar mijoz mehmonxonani oldin ham band qilib bekor qilgan bo'lsa, uning xatti-harakati takrorlanish xavfi katta.
+- **Dalil:** Bekor qilgan mijozlarda oldingi bekor qilishlar o'rtachasi 0.20 ni tashkil qiladi, qolganlarda esa deyarli nolga (0.01) teng.
+
+#### `deposit_type` (Depozit to'lovi turi)
+
+- **Nega yordam beradi:** Pulni oldindan to'lab qo'ygan va qaytarib olinmaydigan (Non Refund) tarifdagi mijozlarning ruhiyati va holati butunlay boshqacha bo'ladi.
+- **Dalil:** Datadagi qiziqarli anomaliya: "Non Refund" (pul qaytarilmaydigan) turida bekor qilish ehtimoli juda yuqori — 99.3%. (Buning sababini menejerdan so'rash kerak).
+
+#### `booking_changes` (Buyurtma ustida o'zgartirishlar qilish)
+
+- **Nega yordam beradi:** Buyurtmasini tahrirlagan (masalan, sanani yoki xonani o'zgartirgan) mijoz odatda mehmonxonaga kelishdan manfaatdor bo'ladi.
+- **Dalil:** Bekor qilinmagan buyurtmalarda o'zgartirishlar miqdori o'rtacha 0.29 ta bo'lsa, bekor qilinganlarda faqat 0.09 ta.
+
+#### `adr` (O'rtacha kunlik narx)
+
+- **Nega yordam beradi:** Narx qimmatlashgani sari mijoz arzonroq alternativ mehmonxona topib, hozirgisini bekor qilish ehtimoli ortadi.
+- **Dalil:** Bekor qilgan mijozlarning o'rtacha kunlik narxi (104.6) bekor qilmaganlarnikiga (99.9) qaraganda qimmatroq.
+
+
+Part D — Find the problems (do not fix yet)
+
+1. Muammo turi: Missing values (Bo'sh kataklar)
+
+- Ustun(lar) nomi: country
+- Muammo tafsiloti: Davlat nomi yozilmagan (katak bo'sh qolgan).
+- Qatorlar soni: 488 ta
+- Topgan kod: df['country'].isnull().sum()
+- Xatomi yoki realmi?: Xato. Ro'yxatga olishda xodimlar tomonidan mijozning davlati kiritilmay qolgan.
+
+2. Muammo turi: Missing that is NOT missing (Ma'noli bo'sh kataklar)
+- Ustun(lar) nomi: company
+- Muammo tafsiloti: Kompaniya ID raqami yozilmagan.
+- Qatorlar soni: 112,593 ta
+- Topgan kod: df['company'].isnull().sum()
+- Xatomi yoki realmi?: Real. Bu xato emas. Mijoz mehmonxonani qandaydir kompaniya orqali emas, o'zi mustaqil band qilganini bildiradi.
+
+3. Muammo turi: Repeated rows (Takrorlangan qatorlar)
+- Ustun(lar) nomi: Barchasi
+- Muammo tafsiloti: Aynan bir xil ma'lumotga ega bo'lgan qatorlar mavjud.
+- Qatorlar soni: 31,994 ta
+- Topgan kod: df.duplicated().sum()
+- Xatomi yoki realmi?: Ikkalasi ham bo'lishi mumkin. Tizim xatosi tufayli 2 marta tushgan bo'lishi mumkin yoki haqiqatan turistik guruhlar xuddi shunday shartlarda ko'plab xonalarni band qilgan bo'lishi mumkin.
+
+4. Muammo turi: Impossible bookings (Mantiqsiz buyurtmalar)
+- Ustun(lar) nomi: adults, children, babies
+- Muammo tafsiloti: Kattalar ham = 0, bolalar = 0, chaqaloqlar ham = 0. Buyurtmada umuman odam yo'q.
+- Qatorlar soni: 180 ta
+- Topgan kod: df[(df['adults']==0) & (df['children']==0) & (df['babies']==0)]
+- Xatomi yoki realmi?: Xato. Mehmonxonada odamsiz xona band qilib bo'lmaydi. Tizimga xato kiritilgan.
+
+5. Muammo turi: Strange numbers (G'alati raqamlar)
+- Ustun(lar) nomi: stays_in_week_nights, stays_in_weekend_nights
+- Muammo tafsiloti: Mijoz 0 kun hafta ichida, 0 kun dam olish kunida qolgan (Umumiy 0 kun).
+- Qatorlar soni: 715 ta
+- Topgan kod: df[(df['stays_in_week_nights']==0) & (df['stays_in_weekend_nights']==0)]
+- Xatomi yoki realmi?: Real bo'lishi mumkin. Mijoz xonani faqat kunduzi (day-use) biror tadbir yoki dam olish uchun bir necha soatga band qilgan bo'lishi mumkin.
+
+6. Muammo turi: Wrong prices (Noto'g'ri narx)
+- Ustun(lar) nomi: adr
+- Muammo tafsiloti: O'rtacha kunlik narx manfiy (-6.38) qiymatga ega.
+- Qatorlar soni: 1 ta
+- Topgan kod: df[df['adr'] < 0]
+- Xatomi yoki realmi?: Xato. Mehmonxona mijozga xonada qolgani uchun pul to'lamaydi.
+
+7. Muammo turi: Wrong prices / Strange numbers (G'alati narxlar)
+- Ustun(lar) nomi: adr
+- Muammo tafsiloti: O'rtacha kunlik narx 0 ga teng.
+- Qatorlar soni: 1,959 ta
+- Topgan kod: df[df['adr'] == 0]
+- Xatomi yoki realmi?: Real bo'lishi mumkin. Bu xodimlar uchun bepul xona, sodiqlik dasturi (bonus) yoki tekin promoushn bo'lishi mumkin.
+
+8. Muammo turi: Inconsistent labels (Turli xil nomlanish)
+- Ustun(lar) nomi: meal
+- Muammo tafsiloti: Ovqatlanish turida ham 'SC' (Self-Catering) ham 'Undefined' (Noma'lum) qiymatlari bor. Ikkalasi ham ovqatsiz degan ma'noni beradi.
+- Qatorlar soni: 11,819 ta ('Undefined')
+- Topgan kod: df['meal'].value_counts()
+- Xatomi yoki realmi?: Xato. Bitta narsa ikki xil nom bilan saqlangan. Ularni birlashtirish kerak.
+
+9. Muammo turi: Wrong data types (Noto'g'ri ma'lumot turi)
+- Ustun(lar) nomi: children
+- Muammo tafsiloti: Bolalar soni float (o'nlik kasr) ko'rinishida saqlangan.
+- Qatorlar soni: Barchasi
+- Topgan kod: df['children'].dtype
+- Xatomi yoki realmi?: Xato. Bola 1.5 yoki 2.0 ta bo'lmaydi, u albatta butun son (int) bo'lishi kerak.
+
+10. Muammo turi: Badly stored dates (Noto'g'ri saqlangan sanalar)
+- Ustun(lar) nomi: arrival_date_year, arrival_date_month, arrival_date_day_of_month
+- Muammo tafsiloti: Kelish sanasi alohida 3 ta ustunlarda matn va raqam aralash berilgan.
+- Qatorlar soni: Barchasi
+- Topgan kod: df[['arrival_date_year', 'arrival_date_month', 'arrival_date_day_of_month']].head()
+- Xatomi yoki realmi?: Yomon format. Analiz qilish uchun bunday bo'laklangan sana noqulay.
+
+## Part E — Clean the data (your decisions)
+
+### "Tuzoq" (Trap) qarorlar isboti
+
+#### Takrorlangan qatorlar (Repeated rows)
+
+Takrorlangan qatorlar bilan bekor qilish darajasi 37.0% ni tashkil etdi. Ular olib tashlanganda esa bu ko'rsatkich keskin tushib, 27.6% ni tashkil qildi. Bu katta farq.
+
+Biz takrorlangan qatorlarni o'chirishga qaror qildik, chunki bu ID raqamsiz kelgan tizim/bot xatosi bo'lishi ehtimoli yuqori. Menejerga takroriylarsiz (27.6%) natijani taqdim etgan ma'qul, chunki u mijozlarning individual, real xatti-harakatini to'g'riroq aks ettiradi.
+
+#### Narxdagi chet qiymatlar (Outliers in price — ADR)
+
+IQR qoidasini qo'llaganimizda jami 3793 ta outlier narx qatorlari topildi. Ammo bularning deyarli barchasi mavsumiy (yozdagi) real qimmat narxlar bo'lgani uchun ularni o'chirmadik.
+
+Faqatgina `adr = 5400` evroga teng bo'lgan 1 ta qatorni o'chirdik, chunki oddiy xona narxi birdaniga 5000+ evro bo'lishi mantiqsiz tizim kiritish xatosidir.
+
+### Muammolarni tozalash jadvali
+
+#### 1. `country` ustunidagi bo'sh qiymatlar
+
+- **Muammo:** `country` ustunida 488 ta bo'sh qator bor.
+- **Qaror:** "Unknown" bilan to'ldirish.
+- **Kod:** `fillna('Unknown')`
+- **Nega bu qaror:** Faqat 0.4% qator. Davlat shunchaki xususiyat, uni yo'qotmaslik uchun to'ldirish halolroq.
+- **Rad etilgan variant:** Qatorni o'chirish — ma'lumot yo'qotilardi. Eng ko'pini (PRT) yozish — faktni soxtalashtirardi.
+- **Qatorlar:** 119,390 -> 119,390
+
+#### 2. `company` va `agent` ustunlari
+
+- **Muammo:** `company` va `agent` ustunlari deyarli bo'sh.
+- **Qaror:** 0 raqami bilan to'ldirish.
+- **Kod:** `fillna(0)`
+- **Nega bu qaror:** Bo'sh katak bu yerda "mijoz mustaqil band qilganini" bildiradi. Uni 0 ID bilan raqamli formatga kiritdik.
+- **Rad etilgan variant:** Ustunni o'chirish — kompaniya va agentliklar biznes uchun muhim belgi, ulardan voz kechib bo'lmaydi.
+- **Qatorlar:** 119,390 -> 119,390
+
+#### 3. Takrorlangan qatorlar
+
+- **Muammo:** 31,994 ta takrorlangan (repeated) qatorlar.
+- **Qaror:** O'chirib tashlash (Remove).
+- **Kod:** `drop_duplicates()`
+- **Nega bu qaror:** Buyurtma ID lari yo'q, shuning uchun bu tizimning 2 marta kiritib yuborish xatosi bo'lishi katta ehtimol.
+- **Rad etilgan variant:** Saqlab qolish — bekor qilish stavkasini (37%) sun'iy ravishda oshirib ko'rsatar va modelni chalg'itardi.
+- **Eslatma:** 31,994 ta takroriy qator soni asl `df` dagi tekshiruv natijasidir. Notebook tozalash jarayonida avval `reservation_status` va `reservation_status_date` ustunlarini o'chirib, keyin `drop_duplicates()` ishlatadi. Shu sababli bu bosqichdagi takrorlangan qatorlar soni dastlabki tekshiruv natijasidan farq qilishi mumkin.
+
+#### 4. Mehmonlar soni 0 bo'lishi
+
+- **Muammo:** Kattalar, bolalar va chaqaloqlar soni 0 ga teng (odam yo'q).
+- **Qaror:** O'chirib tashlash (Remove).
+- **Kod:** `drop(no_people_idx)`
+- **Nega bu qaror:** Mehmonxonada 0 nafar odam bilan xona band qilinishi jismonan ilojsiz. Bu tizim xatosi.
+- **Rad etilgan variant:** 1 ta kattalar bilan to'ldirish — bu qaysi toifadagi xona ekanini bilmaymiz, o'zboshimchalik qila olmaymiz.
+- **Qatorlar:** Bu bosqich uchun alohida son notebook natijasida chiqarilmagan.
+
+#### 5. 0 kun qoladigan buyurtmalar
+
+- **Muammo:** 0 kun qoladigan buyurtmalar.
+- **Qaror:** Saqlab qolish (Keep).
+- **Kod:** (tegmadik)
+- **Nega bu qaror:** Day-use (faqat kunduzi uchrashuv yoki qisqa dam uchun keladigan) xizmatlari mehmonxonalarda mavjud narsa.
+- **Rad etilgan variant:** O'chirish — mehmonxonaning qo'shimcha daromadlarini tahlildan yashirib qo'yardik.
+- **Qatorlar:** O'zgarish yo'q; bu buyurtmalar saqlab qolingan.
+
+#### 6. `adr` narxining manfiy va mantiqsiz katta qiymatlari
+
+- **Muammo:** `adr` narxi manfiy (-6.38) va mantiqsiz katta (5400) bo'lgan qatorlar.
+- **Qaror:** O'chirish (Remove).
+- **Kod:** `df_clean[(df_clean['adr'] >= 0) & (df_clean['adr'] < 5000)]`
+- **Nega bu qaror:** Mehmonxona mijozga pul to'lamaydi (-). 5400 lik adr ham statistik anomaliya va xatodir.
+- **Rad etilgan variant:** O'rtacha qiymatga (mean) o'zgartirish — narxni buzish yaxshi amaliyot emas, atigi 2 ta qatorni o'chirish osonroq.
+- **Qatorlar:** Bu bosqich uchun alohida son notebook natijasida chiqarilmagan.
+
+#### 7. `meal` ustunidagi `'Undefined'` va `'SC'`
+
+- **Muammo:** `meal` (ovqat) turida 'Undefined' va 'SC' takrorlanishi.
+- **Qaror:** Fix (Birlashtirish).
+- **Kod:** `replace('Undefined', 'SC')`
+- **Nega bu qaror:** Ikkalasi ham bitta narsa ("ovqatsiz"). Model ularni ikki xil tur deb adashmasligi uchun standartlashtirdik.
+- **Rad etilgan variant:** O'chirish — 11 mingta real ma'lumot yo'qotilardi.
+- **Qatorlar:** O'zgarish yo'q; qiymatlar birlashtirilgan.
+
+#### 8. `children` ustunining ma'lumot turi
+
+- **Muammo:** `children` ustuni Float turida.
+- **Qaror:** Fix (Integer turiga o'tkazish va ozgina bo'sh katakni 0 qilish).
+- **Kod:** `fillna(0).astype(int)`
+- **Nega bu qaror:** Bolalar soni 1.5 ta bo'la olmaydi.
+- **Rad etilgan variant:** Shunday qoldirish — ML modellari turli tiplardan xatolik berishi mumkin.
+- **Qatorlar:** Bu bosqich uchun alohida son notebook natijasida chiqarilmagan.
+
+#### 9. Sanalarni birlashtirish
+
+- **Muammo:** Sanalar alohida 3 ta ustunga bo'linib ketgan.
+- **Qaror:** Bitta `arrival_date` nomli DateTime ustuniga birlashtirish.
+- **Kod:** `pd.to_datetime(...)`
+- **Nega bu qaror:** Sana bo'yicha trendlar yoki hafta kunlarini topish uchun matn yoki son emas, haqiqiy Date formati talab etiladi.
+- **Rad etilgan variant:** 3 ta ustunni qoldirish — keyingi Part H dagi jadvallarni va vaqt qatorlarini analiz qilishni qiyinlashtirardi.
+- **Eslatma:** Kod kelish sanasining yil, oy va kun ustunlari bilan birga `arrival_date_week_number` ustunini ham o'chiradi.
+
+Notebook natijasiga ko'ra, tozalashdan keyingi DataFrame 86,970 qator va 0 ta bo'sh qiymatga ega. Tozalash bosqichlari orasidagi qatorlar soni alohida chop etilmagani uchun yuqorida tasdiqlanmagan oraliq sonlar keltirilmadi.
+
+Part F — Create new features
+
+Kelajakdagi model uchun buyurtma berilgan vaqtning o'zidayoq ma'lum bo'ladigan 4 ta yangi xususiyat (feature) yaratildi. Biz "assigned_room_type" ga asoslangan "boshqa xona oldimi?" degan taklifni ongli ravishda rad etdik. Sababi, mijozga qaysi xona berilishi u mehmonxonaga kelganida (Check-in) aniq bo'ladi va bu Leakage (ma'lumot sizib chiqishi) hisoblanadi.
+
+Yaratilgan 4 ta yangi ustun (Features):
+
+1. Ustun nomi: total_nights
+- Kod: df_clean['stays_in_week_nights'] + df_clean['stays_in_weekend_nights']
+- Nima ma'noni anglatadi: Mehmonxonada qolishning jami tunlari soni.
+- Nega yordam beradi: Uzoq muddatli buyurtmalarda rejalar o'zgarib ketish ehtimoli yuqoriroq bo'lishi mumkin.
+- Ko'rsatkichlar: Bekor qilinmaganlarda o'rtacha 3.39 kun, Bekor qilinganlarda o'rtacha 3.53 kun.
+
+2. Ustun nomi: total_guests
+- Kod: df_clean['adults'] + df_clean['children'] + df_clean['babies']
+- Nima ma'noni anglatadi: Bitta xonaga kelayotgan jami odamlar (mehmonlar) soni.
+- Nega yordam beradi: Katta guruhlar (ko'p odam) uchun sayohatni muvofiqlashtirish qiyinroq va bekor bo'lish xavfi yuqori bo'ladi.
+- Ko'rsatkichlar: Bekor qilinmaganlarda o'rtacha 1.96 kishi, Bekor qilinganlarda o'rtacha 2.03 kishi.
+
+3. Ustun nomi: total_price
+- Kod: df_clean['total_nights'] * df_clean['adr']
+- Nima ma'noni anglatadi: Qolishning taxminiy umumiy summasi.
+- Nega yordam beradi: Umumiy narx qancha qimmat bo'lsa, mijozning moliyaviy qarori o'zgarib, arzonroq joy topib ketish ehtimoli ortadi.
+- Ko'rsatkichlar: Bekor qilinmaganlarda o'rtacha 350.27, Bekor qilinganlarda o'rtacha 390.87.
+
+4. Ustun nomi: is_family
+- Kod: ((df_clean['children'] > 0) | (df_clean['babies'] > 0)).astype(int)
+- Nima ma'noni anglatadi: Buyurtmada bolalar yoki chaqaloqlar bormi? (1 = Ha, 0 = Yo'q).
+- Nega yordam beradi: Bolali oilalarda kutilmagan holatlar (masalan, bolaning kasal bo'lishi) tufayli bekor qilish tendensiyasi boshqacha bo'lishi mumkin.
+- Ko'rsatkichlar: Bekor qilinmaganlarda o'rtacha 0.091 (9.1%), Bekor qilinganlarda o'rtacha 0.067 (6.7%).
+
+G-qism — Menejerning savollariga javoblar
+
+1-savol: Har bir mehmonxonada buyurtmalarning necha foizi bekor qilinadi?
+- Kod: df_clean.groupby('hotel')['is_canceled'].mean() * 100
+- Natija: City Hotel = 30.0%, Resort Hotel = 23.5%
+- Tushuntirish: Shahar mehmonxonasidagi bekor qilish darajasi Resort Hotel'ga qaraganda taxminan 6.5 foiz punktga yuqori.
+
+2-savol: Qaysi bozor segmenti eng ko'p bekor qiladi? Va qaysi biri eng kam?
+- Kod: df_clean.groupby('market_segment')['is_canceled'].mean().sort_values() * 100
+- Natija: Eng ko'p = Groups (53.6%), Eng kam = Direct (17.5%)
+- Tushuntirish: Guruh bo'lib keladigan mijozlar buyurtmalarni hammadan ko'p bekor qiladi, to'g'ridan-to'g'ri (Direct) o'zi bog'langan mijozlar esa eng ishonchli hisoblanadi.
+
+3-savol: Bekor qilingan buyurtmalarda kutish vaqti (lead time) uzoqroqmi? O'rtacha (mean) va mediana (median) qiymatlarini taqqoslang. Nega ular bir-biridan bunchalik farq qiladi?
+- Kod: df_clean.groupby('is_canceled')['lead_time'].agg(['mean', 'median'])
+- Natija: Bekor qilinganlarda: Mean = 104.9, Median = 74.0. Bekor qilinmaganlarda: Mean = 80.0, Median = 46.0. 
+- Tushuntirish: Bekor qilingan buyurtmalarning kutish vaqti uzoqroq, ammo o'rtacha (mean) qiymat medianadan juda katta bo'lishining sababi — bazada bir yildan ortiq vaqt oldin qilingan ekstremal buyurtmalar (outliers) borligi va ular o'rtacha qiymatni sun'iy ravishda yuqoriga tortib yuborishidir.
+
+4-savol: Har bir mehmonxona qaysi oyda eng qimmat bo'ladi?
+- Kod: df_clean.groupby(['hotel', 'month_name'])['adr'].mean()
+- Natija: Resort Hotel = August (178.6), City Hotel = May (126.8)
+- Tushuntirish: Dam olish maskani (Resort) yozgi ta'tilning eng qizg'in pallasi bo'lgan avgust oyida, shahar mehmonxonasi esa bahor oxirida (may oyida) o'zining eng qimmat narxlariga chiqadi.
+
+5-savol: "Non Refund" (Pul qaytarilmaydigan) buyurtmalarning necha foizi bekor qilingan? Nega bu natija g'alati bo'lishi mumkin? Menejerdan nima deb so'ragan bo'lardingiz?
+- Kod: df_clean[df_clean['deposit_type'] == 'Non Refund']['is_canceled'].mean() * 100
+- Natija: 99.3%
+- Tushuntirish: Pul qaytarilmaydigan tarifda bekor qilish 99.3% bo'lishi juda mantiqsiz, chunki mijozlar o'z pullarini yo'qotishni xohlamaydi. Men menejerdan: "Bu tizimning qandaydir avtomatik xatosi emasmi yoki guruhlar pulni boshqa yo'l bilan qaytarib olishganmi?" deb so'ragan bo'lardim.
+
+6-savol: Bekor qilishlar haqida o'zingizning savolingizni yozing. Unga ma'lumotlar bilan javob bering.
+- Mening savolim: Maxsus talabi (masalan, qo'shimcha yostiq) bor bo'lgan mijozlar xonani kamroq bekor qiladimi?
+- Kod: df_clean.groupby(df_clean['total_of_special_requests'] > 0)['is_canceled'].mean() * 100
+- Natija: Talabi borlar = 16.3%, Talabi yo'qlar = 37.1%
+- Tushuntirish: Maxsus talab qoldirgan mijozlarning bekor qilish darajasi hech qanday talab qoldirmaganlarga qaraganda 2 barobar past, demak ular haqiqatan kelish niyatida bo'ladi.
+
+7-savol: Narxlar haqida o'zingizning savolingizni yozing. Unga ma'lumotlar bilan javob bering.
+- Mening savolim: Dam olish kunlari (weekend) qoladigan mijozlarning o'rtacha narxi faqat ish kunlari qoladiganlarga qaraganda qimmatroqmi?
+- Kod: df_clean.groupby(df_clean['stays_in_weekend_nights'] > 0)['adr'].mean()
+- Natija: Dam olish kunlari borlar = 111.4, Faqat ish kunlari = 99.6
+- Tushuntirish: Ha, dam olish kunlarini o'z ichiga olgan buyurtmalar uchun kunlik o'rtacha to'lov qariyb 12 valyutaga qimmatroq bo'ladi.
+
+H-qism — Grafiklar (Charts)
+
+1-savol: Odamlar qancha vaqt oldin buyurtma berishadi?
+- Grafik turi: Gistogramma (Histogram).
+- Nega bu tur: Gistogramma bitta raqamli o'zgaruvchining (lead_time) qanday taqsimlanganini va qaysi oraliqda ko'proq to'planganini ko'rsatib berish uchun eng mos tanlovdir.
+- Kod: sns.histplot(df_clean['lead_time'], bins=50)
+- Nima ko'rsatadi: Mijozlarning juda katta qismi mehmonxonani 0 dan 50 kungacha bo'lgan qisqa muddat ichida band qilishini va muddat uzaygani sari buyurtmalar soni keskin kamayishini ko'rsatadi.
+
+2-savol: Qaysi mehmonxonada bekor qilishlar ko'proq?
+- Grafik turi: Guruhlangan ustunli grafik (Countplot).
+- Nega bu tur: Ikki xil mehmonxonani (City va Resort) yana ikki guruhga (bekor qilingan va qilinmagan) ajratib, ularning aniq sonini vizual solishtirish uchun eng yaxshi vosita.
+- Kod: sns.countplot(data=df_clean, x='hotel', hue='is_canceled')
+- Nima ko'rsatadi: Shahar mehmonxonasida (City Hotel) ham umumiy buyurtmalar soni, ham bekor qilishlar soni Dam olish maskaniga (Resort Hotel) nisbatan ancha ko'p ekanligini ko'rsatadi.
+
+3-savol: Oylar bo'yicha har bir mehmonxonada o'rtacha narx qanday o'zgaradi?
+- Grafik turi: Chiziqli grafik (Line chart).
+- Nega bu tur: Chiziqli grafik oylar bo'yicha o'rtacha narx o'zgarishini taqqoslashga yordam beradi. Kodda oylarning kalendar tartibi belgilanmagan, shuning uchun grafikdagi ketma-ketlik kalendar tartibiga mos kelmasligi mumkin.
+- Kod: sns.lineplot(data=df_clean, x='month_name', y='adr', hue='hotel')
+- Nima ko'rsatadi: Dam olish maskani (Resort) narxi yoz oylarida (avgustda) eng yuqori cho'qqiga chiqishini, Shahar mehmonxonasining narxi esa butun yil davomida deyarli bir xil, faqat may oyida biroz qimmatlashishini ko'rsatadi.
+
+4-savol: Qaysi bozor segmentlari eng ko'p bekor qiladi?
+- Grafik turi: Ustunli grafik (Barplot).
+- Nega bu tur: Turli xil toifalar (segmentlar) o'rtasida bitta o'rtacha ko'rsatkichni (bekor qilish foizi) vizual taqqoslash va qaysi biri eng baland ekanini ko'rish uchun qulay.
+- Kod: sns.barplot(data=segment_data, x='market_segment', y='is_canceled')
+- Nima ko'rsatadi: "Groups" (Guruhlar) segmentining ustuni eng baland ekanligini, demak guruh bo'lib keluvchilar eng ko'p bekor qiluvchi mijozlar ekanligini ko'rsatadi.
+
+5-savol: Qaysi raqamli ustunlar bir-biriga bog'liq?
+- Grafik turi: Issiqlik xaritasi (Heatmap).
+- Nega bu tur: Ko'plab raqamli ustunlarning bir-biriga korrelyatsiyasini (bog'liqlik darajasini) ranglar yordamida bitta matritsada tez va oson ilg'ab olish uchun qo'llaniladi.
+- Kod: sns.heatmap(df_clean[muhim_ustunlar].corr(), annot=True)
+- Nima ko'rsatadi: 'is_canceled' (bekor qilish) va 'lead_time' (kutish vaqti) o'rtasida ijobiy bog'liqlik borligini (kutish vaqti uzaysa, bekor qilish ehtimoli ham ortishini) ko'rsatadi.
+
+I-qism — Xulosa va mulohaza (Reflection)
+
+1. Qaysi qarorni qabul qilish eng qiyin bo'ldi? Agar boshqacha qaror qabul qilganingizda nima o'zgargan bo'lardi?
+Eng qiyin qaror qariyb 32,000 ta takrorlangan (duplicated) qatorlarni o'chirib tashlash bo'ldi, chunki ma'lumotlarda aniq "Buyurtma ID"si yo'q edi va ularning ba'zilari real guruhli buyurtmalar bo'lishi ham mumkin edi. Agar ularni o'chirmasdan saqlab qolganimizda, ma'lumotlardagi umumiy bekor qilish foizi 27.6% o'rniga 37.0% bo'lib, sun'iy ravishda oshib ketgan bo'lardi va kelajakdagi modelimiz mijozlar qarorini noto'g'ri (pessimistik) bashorat qilishga o'rganib qolardi.
+
+2. Ushbu ma'lumotlarda o'zingiz hali ham ishonmaydigan ikkita narsani ayting va ularni mehmonxona bilan qanday tekshirgan bo'lardingiz?
+- Birinchisi: "Non Refund" (pul qaytarilmaydigan) depozit turlarida bekor qilish darajasi 99.3% ekanligi. Buni mehmonxonaning IT bo'limi yoki qabulxonasi (reception) bilan bog'lanib, "Tizimda bekor qilingan buyurtmalar avtomatik ravishda 'Non Refund' statusiga o'zgarib qolmaydimi?" deb so'rab tekshirgan bo'lardim.
+- Ikkinchisi: Narxi (ADR) 0 ga teng bo'lgan qariyb 2,000 ta buyurtma. Bular xodimlar uchunmi, bonus (sodiqlik) dasturiga berilgan tekin xonalarmi yoki narx kiritish esdan chiqqan xatolikmi ekanligini moliya bo'limidan aniqlashtirgan bo'lardim.
+
+3. Menejerga uchta gap bilan nima degan bo'lardingiz?
+Ma'lumotlar bazasi barcha mantiqsiz xatoliklar va "sizib chiqish" (leakage) tuzoqlaridan tozalandi hamda kelasi oydagi bashorat modeli uchun to'liq tayyor holatga keltirildi. Dastlabki tahlillarimiz shuni ko'rsatmoqdaki, eng katta bekor qilish xavfi uzoq muddat oldin kutish vaqti (lead time) bilan qilingan buyurtmalar va "Guruhlar" (Groups) segmentiga to'g'ri kelmoqda. Yakuniy modelni o'rgatishdan oldin, bazadagi narxi 0 bo'lgan xonalar va "Non Refund" tarifidagi mantiqsiz holatlarni tizim administratorlari bilan aniqlashtirib olishingizni tavsiya qilaman.
